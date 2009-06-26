@@ -1,6 +1,21 @@
-= tokyo_store
+= TokyoStore
 
-Description goes here.
+Tokyo Tyrant based Rails cache store.
+
+
+*Playground Warning*  This is just me playing, maybe, who knows it'll be/have:
+
+* Fast
+* TTL & Substring Matching
+
+
+== Got nothing better do to?
+
+  script/plugin install..
+
+  # session store
+  config.action_controller.session_store = :tokyo_store
+
 
 == Copyright
 
