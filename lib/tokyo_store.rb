@@ -50,7 +50,7 @@ module ActiveSupport
 
       def read(key, options = nil) # :nodoc:
         super
-        @data[key]
+        Marshal.load(@data[key])
         # if str = @data.get(key)
         #   Marshal.load str
         #   else
@@ -93,13 +93,14 @@ module ActiveSupport
       end
 
       def increment(key, amount = 1) # :nodoc:
-        log("incrementing", key, amount)
-        # TODO
+        write(key, read(key) + amount)
+        # TODO native?
       end
 
       def decrement(key, amount = 1) # :nodoc:
-        log("decrement", key, amount)
-        #TODO
+        write(key, read(key) - amount)
+        # log("decrement", key, amount)
+        #TODO native?
       end
 
       def delete_matched(matcher, options = nil) # :nodoc:
