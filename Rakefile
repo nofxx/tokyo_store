@@ -5,7 +5,7 @@ begin
   require 'jeweler'
   Jeweler::Tasks.new do |gem|
     gem.name = "tokyo_store"
-    gem.summary = %Q{TODO}
+    gem.summary = "Tokyo Tyrant rails session store"
     gem.email = "x@nofxx.com"
     gem.homepage = "http://github.com/nofxx/tokyo_store"
     gem.authors = ["Marcos Piccinini"]

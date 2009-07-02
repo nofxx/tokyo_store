@@ -59,7 +59,9 @@ module ActiveSupport
         # TODO: benchmark [key] vs .get(key)
         super
         return nil unless val = @data[key]
+
         val = Marshal.load(val) unless raw?(options)
+
         val
         # if str = @data.get(key)
         #   Marshal.load str
@@ -95,7 +97,7 @@ module ActiveSupport
 
       def exist?(key, options = nil) # :nodoc:
         # Local cache is checked first?
-        !@data[key].nil?
+       !read(key, options).nil?
       end
 
       def increment(key, amount = 1) # :nodoc:

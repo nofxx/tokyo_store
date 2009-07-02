@@ -195,14 +195,14 @@ describe "TokyoStore" do
       end
     end
 
-    # it "test_local_cache_of_exist" do
-    #   @cache.with_local_cache do
-    #     @cache.write('foo', 'bar')
-    #     @cache.instance_variable_set(:@data, nil)
-    #     @data.clear # Clear remote cache
-    #     @cache.exist?('foo').should be_true
-    #   end
-    # end
+    it "test_local_cache_of_exist" do
+      @cache.with_local_cache do
+        @cache.write('foo', 'bar')
+        @cache.instance_variable_set(:@data, nil)
+        @data.clear # Clear remote cache
+        @cache.exist?('foo').should be_true
+      end
+    end
 
     it "test_local_cache_of_increment" do
       @cache.with_local_cache do
