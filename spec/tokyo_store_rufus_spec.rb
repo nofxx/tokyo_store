@@ -8,7 +8,7 @@ describe "TokyoStore" do
   end
 
   it "should fail" do
-    tokyo = Rufus::Tokyo::Tyrant.new('localhost', 45001)
+    tokyo = Rufus::Tokyo::Tyrant.new('localhost', 1978)
     Rufus::Tokyo::Tyrant.should_not_receive(:new)
     store = ActiveSupport::Cache.lookup_store :tokyo_store, tokyo
     store.should be_kind_of ActiveSupport::Cache::TokyoStore
@@ -17,7 +17,7 @@ describe "TokyoStore" do
   describe "Similar" do
 
     before(:each) do
-      @cache = ActiveSupport::Cache::TokyoStore.new 'localhost:45001'
+      @cache = ActiveSupport::Cache::TokyoStore.new 'localhost:1978'
       @cache.clear
     end
 

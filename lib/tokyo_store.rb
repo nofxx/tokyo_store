@@ -16,7 +16,7 @@ module ActiveSupport
         store = store.flatten
         options = store.extract_options!
         #TODO: multiple instances
-        store = store.empty? ? ["localhost", 45001]  : store[0].split(":")
+        store = store.empty? ? ["localhost", 1978]  : store[0].split(":")
 
         #TODO: Auto choice between tyrant ffi x tyrant pure ruby x cabinet C
         # Tyrant FFI
@@ -38,7 +38,7 @@ module ActiveSupport
       #   ActiveSupport::Cache::TokyoStore.new("localhost", "server-downstairs.localnetwork:8229")
       #
       # If no addresses are specified, then TokyoStore will connect to
-      # localhost port 45001 (the default memcached port).
+      # localhost port 1978 (the default tyrant port).
       def initialize(*store)
         if store.first.respond_to?(:get)
           @data = store.first

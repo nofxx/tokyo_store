@@ -15,9 +15,9 @@ M = P * 10
 G = M * 10
 OBJ = { :small => P, :medium => M, :big => G}
 
-@tokyo = ActiveSupport::Cache.lookup_store :tokyo_store, "localhost:45001"
+@tokyo = ActiveSupport::Cache.lookup_store :tokyo_store, "localhost:1978"
 @memca = ActiveSupport::Cache.lookup_store :mem_cache_store, "localhost:11211"
-@memto = ActiveSupport::Cache.lookup_store :mem_cache_store, "localhost:45001"
+@memto = ActiveSupport::Cache.lookup_store :mem_cache_store, "localhost:1978"
 
 # # # Read & Write
  Benchmark.bmbm do |b|
