@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name = %q{tokyo_store}
-  s.version = "0.1.1"
+  s.version = "0.1.3"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Marcos Piccinini"]
@@ -20,7 +20,10 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION",
      "benchmark/tokyo_store.rb",
-     "lib/tokyo_store.rb",
+     "init.rb",
+     "lib/tokyo_cache_store.rb",
+     "lib/tokyo_session_store.rb",
+     "rails/init.rb",
      "spec/spec_helper.rb",
      "spec/tokyo_store_rufus_spec.rb",
      "spec/tokyo_store_spec.rb",

@@ -59,9 +59,7 @@ module ActiveSupport
         # TODO: benchmark [key] vs .get(key)
         super
         return nil unless val = @data[key]
-
         val = Marshal.load(val) unless raw?(options)
-
         val
         # if str = @data.get(key)
         #   Marshal.load str
