@@ -51,13 +51,16 @@ module ActiveSupport
 
       # Reads multiple keys from the cache.
       def read_multi(*keys)
-        keys.map { |k| read(k) }
-        #TODO native?
+        #keys.inject({ }){ |h,k| h.merge({ k => read(k)}) }
+        @data.lget(keys).inject({ }) { |h, k| h.merge({ k[0] => Marshal.load(k[1])})} #
       end
 
       def read(key, options = nil) # :nodoc:
+        # TODO: benchmark [key] vs .get(key)
         super
-        @data[key] ? Marshal.load(@data[key]).freeze : nil
+        return nil unless val = @data[key]
+        val = Marshal.load(val) unless raw?(options)
+        val
         # if str = @data.get(key)
         #   Marshal.load str
         #   else
@@ -72,15 +75,13 @@ module ActiveSupport
       # Possible options:
       # - +:unless_exist+ - set to true if you don't want to update the cache
       #   if the key is already set.
-      # - +:expires_in+ - the number of seconds that this value may stay in
-      #   the cache. See ActiveSupport::Cache::Store#write for an example.
       def write(key, value, options = nil)
         super
         method = options && options[:unless_exist] ? :add : :set
-        # memcache-client will break the connection if you send it an integer
+        # will break the connection if you send it an integer
         # in raw mode, so we convert it to a string to be sure it continues working.
-        value = value.to_s if raw?(options)
-        value = Marshal.dump value # if value.instance_of? Hash
+        value = raw?(options) ? value.to_s : Marshal.dump(value) # if value.instance_of? Hash
+
         @data[key] = value
         ###response = @data.put(key, value) || STDERR.printf("get error: %s\n", @data.errmsg(@data.ecode))#, expires_in(options), raw?(options))
         # logger.error("TokyoError (#{e}): #{e.message}")
@@ -93,24 +94,23 @@ module ActiveSupport
       end
 
       def exist?(key, options = nil) # :nodoc:
-        # Doesn't call super, cause exist? in memcache is in fact a read
-        # But who cares? Reading is very fast anyway
-        # Local cache is checked first, if it doesn't know then memcache itself is read from
-        !read(key, options).nil?
+        # Local cache is checked first?
+        !@data[key].nil?
       end
 
       def increment(key, amount = 1) # :nodoc:
-        #NATIVE, JUST SEE ABOUT MARSHAL
-        @data.incr(key, amount)
+        #NATIVE breaks...rufus integer prob?
+        # @data.incr(key, amount)
+        @data[key] = (@data[key].to_i + amount).to_s
       end
 
       def decrement(key, amount = 1) # :nodoc:
-        # WARNING! NATIVE, BUT UGLY
-        @data.incr(key, -amount)
+        # @data.incr(key, -amount)
+        increment(key, -amount)
       end
 
       def delete_matched(matcher, options = nil) # :nodoc:
-        #TODO
+        #TODO @data.ldelete?
       end
 
       def clear
@@ -123,9 +123,9 @@ module ActiveSupport
 
       private
         #TODO
-        def expires_in(options)
-          (options && options[:expires_in]) || 0
-        end
+        # def expires_in(options)
+        #   (options && options[:expires_in]) || 0
+        # end
 
         def raw?(options)
           options && options[:raw]

@@ -16,18 +16,46 @@ describe "TokyoStore" do
 
   describe "Similar" do
 
-    before(:all) do
+    before(:each) do
       @cache = ActiveSupport::Cache::TokyoStore.new 'localhost:45001'
+      @cache.clear
     end
 
-    it "test_should_read_and_write_strings" do
+    it "should return true on success" do
+      @cache.write('foo', 'bar').should be_true
+    end
+
+    it "should read and write strings" do
       @cache.write('foo', 'bar')
       @cache.read('foo').should eql('bar')
     end
 
-    it "test_should_read_and_write_hash" do
+    it "should read and write hash" do
       @cache.write('foo', {:a => "b"})
       @cache.read('foo').should eql({:a => "b"})
+    end
+
+    it "should write integers" do
+      @cache.write('foo', 1)
+      @cache.read('foo').should eql(1)
+    end
+
+    it "should write nil" do
+      @cache.write('foo', nil)
+      @cache.read('foo').should eql(nil)
+    end
+
+    it "should have a cache miss block" do
+      @cache.write('foo', 'bar')
+      @cache.fetch('foo') { 'baz' }.should eql('bar')
+    end
+
+    it "should have a cache miss block" do
+      @cache.fetch('foo') { 'baz' }.should eql('baz')
+    end
+
+    it "should have a forced cache miss block" do
+      @cache.fetch('foo', :force => true).should be_nil
     end
 
     it "should read and write hash" do
@@ -40,11 +68,6 @@ describe "TokyoStore" do
       @cache.read('foo').should eql([1,2,3])
     end
 
-    it "should write integers" do
-      @cache.write('foo', 1)
-      @cache.read('foo').should eql(1)
-    end
-
     it "should read and write obj" do
       obj = City.new; obj.name = "Acapulco"; obj.pop = 717766
       @cache.write('foo', obj)
@@ -55,7 +78,7 @@ describe "TokyoStore" do
     it "should read multiples" do
       @cache.write('a', 1)
       @cache.write('b', 2)
-      @cache.read_multi('a','b').should eql([1,2])
+      @cache.read_multi('a','b').should eql({ 'a' => 1, 'b' => 2})
     end
 
     it "should clear all" do
@@ -71,31 +94,49 @@ describe "TokyoStore" do
     end
 
     it "should increment value" do
-      @cache.write("val", 1)
-      @cache.increment("val")
-      @cache.read("val").should eql(2)
+      @cache.write('val', 1, :raw => true)
+      @cache.read("val", :raw => true).to_i.should eql 1
+      @cache.increment('val')
+      @cache.read("val", :raw => true).to_i.should eql 2
+      @cache.increment('val')
+      @cache.read("val", :raw => true).to_i.should eql 3
     end
 
     it "should decrement value" do
-      @cache.write("val", 1)
-      @cache.decrement("val")
-      @cache.read("val").should eql(0)
+      @cache.write('val', 3, :raw => true)
+      @cache.read("val", :raw => true).to_i.should eql 3
+      @cache.decrement('val')
+      @cache.read("val", :raw => true).to_i.should eql 2
+      @cache.decrement('val')
+      @cache.read("val", :raw => true).to_i.should eql 1
     end
 
     it "should clear all" do
+      @cache.increment("val")
       @cache.exist?("val").should be_true
       @cache.clear
       @cache.exist?("val").should be_false
     end
 
     it "should show some stats" do
-      @cache.stats.should match(hash_including({ :type => "hash"}))
+      @cache.stats.should be_instance_of Hash #== hash_including({ :type => "hash"})
     end
 
-    it "store objects should be immutable should be immutable" do
-      @cache.write('foo', 'bar')
-      lambda { @cache.read('foo').gsub!(/.*/, 'baz') }.should raise_error(ActiveSupport::FrozenObjectError)
-      @cache.read('foo').should ==  'bar'
+    it "store objects should be immutable" do
+      @cache.with_local_cache do
+        @cache.write('foo', 'bar')
+        @cache.read('foo').gsub!(/.*/, 'baz')# }.should raise_error(ActiveSupport::FrozenObjectError)
+        @cache.read('foo').should ==  'bar'
+      end
+    end
+
+    it "stored objects should not be frozen" do
+      @cache.with_local_cache do
+        @cache.write('foo', 'bar')
+      end
+      @cache.with_local_cache do
+        @cache.read('foo').should_not be_frozen
+      end
     end
 
     it "should delete matched" do
@@ -103,13 +144,109 @@ describe "TokyoStore" do
       @cache.write("value", 1)
       @cache.write("not", 1)
       @cache.delete_matched('val')
-
-      @cach
     end
 
-    after(:all) do
+  end
+
+  describe "backed store" do
+    before(:each) do
+      @cache = ActiveSupport::Cache.lookup_store(:tokyo_store)
+      @data = @cache.instance_variable_get(:@data)
       @cache.clear
     end
+
+    it "local_writes_are_persistent_on_the_remote_cache" do
+      @cache.with_local_cache do
+        @cache.write('foo', 'bar')
+      end
+
+      @cache.read('foo').should eql('bar')
+    end
+
+    it "test_clear_also_clears_local_cache" do
+      @cache.with_local_cache do
+        @cache.write('foo', 'bar')
+        @cache.clear
+        @cache.read('foo').should be_nil
+      end
+    end
+
+    it "test_local_cache_of_read_and_write" do
+      @cache.with_local_cache do
+        @cache.write('foo', 'bar')
+        @data.clear # Clear remote cache
+        @cache.read('foo').should eql('bar')
+      end
+    end
+
+    it "test_local_cache_should_read_and_write_integer" do
+      @cache.with_local_cache do
+        @cache.write('foo', 1)
+        @cache.read('foo').should eql(1)
+      end
+    end
+
+    it "test_local_cache_of_delete" do
+      @cache.with_local_cache do
+        @cache.write('foo', 'bar')
+        @cache.delete('foo')
+        @data.clear # Clear remote cache
+        @cache.read('foo').should be_nil
+      end
+    end
+
+    # it "test_local_cache_of_exist" do
+    #   @cache.with_local_cache do
+    #     @cache.write('foo', 'bar')
+    #     @cache.instance_variable_set(:@data, nil)
+    #     @data.clear # Clear remote cache
+    #     @cache.exist?('foo').should be_true
+    #   end
+    # end
+
+    it "test_local_cache_of_increment" do
+      @cache.with_local_cache do
+        @cache.write('foo', 1, :raw => true)
+        @cache.increment('foo')
+        @data.clear # Clear remote cache
+        @cache.read('foo', :raw => true).to_i.should eql(2)
+      end
+    end
+
+    it "test_local_cache_of_decrement" do
+      @cache.with_local_cache do
+        @cache.write('foo', 1, :raw => true)
+        @cache.decrement('foo')
+        @data.clear # Clear remote cache
+        @cache.read('foo', :raw => true).to_i.should be_zero
+      end
+    end
+
+    it "test_exist_with_nulls_cached_locally" do
+      @cache.with_local_cache do
+        @cache.write('foo', 'bar')
+        @cache.delete('foo')
+        @cache.exist?('foo').should be_false
+      end
+    end
+
+    it "test_multi_get" do
+      @cache.with_local_cache do
+        @cache.write('foo', 1)
+        @cache.write('goo', 2)
+        @cache.read_multi('foo', 'goo').should eql({'foo' => 1, 'goo' => 2})
+      end
+    end
+
+    it "test_middleware" do
+      app = lambda { |env|
+        result = @cache.write('foo', 'bar')
+        @cache.read('foo').should eql('bar') # make sure 'foo' was written
+      }
+      app = @cache.middleware.new(app)
+      app.call({})
+    end
+
   end
 
 end
