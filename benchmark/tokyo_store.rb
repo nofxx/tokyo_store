@@ -24,18 +24,31 @@ OBJ = { :small => P, :medium => M, :big => G}
   b.report("TokyoStore# P") { 10_000.times { |i| @tokyo.write i.to_s, P }}
   b.report("MemCacheD # P") { 10_000.times { |i| @memca.write i.to_s, P }}
   b.report("MemCacheT # P") { 10_000.times { |i| @memto.write i.to_s, P }}
-  b.report("TokyoStore# M") { 10_000.times { |i| @tokyo.write i.to_s, M }}
-  b.report("MemCacheD # M") { 10_000.times { |i| @memca.write i.to_s, M }}
-  b.report("MemCacheT # M") { 10_000.times { |i| @memto.write i.to_s, M }}
-  b.report("TokyoStore# G") { 10_000.times { |i| @tokyo.write i.to_s, G }}
-  b.report("MemCacheD # G") { 10_000.times { |i| @memca.write i.to_s, G }}
-  b.report("MemCacheT # G") { 10_000.times { |i| @memto.write i.to_s, G }}
-  b.report("TokyoStore# OB") { 10_000.times { |i| @tokyo.write i.to_s, OBJ }}
-  b.report("MemCacheD # OB") { 10_000.times { |i| @memca.write i.to_s, OBJ }}
-  b.report("MemCacheT # OB") { 10_000.times { |i| @memto.write i.to_s, OBJ }}
-  b.report("TokyoStore# R") { 10_000.times { |i| @tokyo.read i.to_s }}
-  b.report("MemCacheD # R") { 10_000.times { |i| @memca.read i.to_s }}
-  b.report("MemCacheT # R") { 10_000.times { |i| @memto.read i.to_s }}
+  # b.report("TokyoStore# M") { 10_000.times { |i| @tokyo.write i.to_s, M }}
+  # b.report("MemCacheD # M") { 10_000.times { |i| @memca.write i.to_s, M }}
+  # b.report("MemCacheT # M") { 10_000.times { |i| @memto.write i.to_s, M }}
+  # b.report("TokyoStore# G") { 10_000.times { |i| @tokyo.write i.to_s, G }}
+  # b.report("MemCacheD # G") { 10_000.times { |i| @memca.write i.to_s, G }}
+  # b.report("MemCacheT # G") { 10_000.times { |i| @memto.write i.to_s, G }}
+  # b.report("TokyoStore# OB") { 10_000.times { |i| @tokyo.write i.to_s, OBJ }}
+  # b.report("MemCacheD # OB") { 10_000.times { |i| @memca.write i.to_s, OBJ }}
+  # b.report("MemCacheT # OB") { 10_000.times { |i| @memto.write i.to_s, OBJ }}
+  # b.report("TokyoStore# R") { 10_000.times { |i| @tokyo.read i.to_s }}
+  # b.report("MemCacheD # R") { 10_000.times { |i| @memca.read i.to_s }}
+  # b.report("MemCacheT # R") { 10_000.times { |i| @memto.read i.to_s }}
+  b.report("TokyoStore# E") { 10_000.times { |i| @tokyo.exist? i.to_s }}
+  b.report("MemCacheD # E") { 10_000.times { |i| @memca.exist? i.to_s }}
+  b.report("MemCacheT # E") { 10_000.times { |i| @memto.exist? i.to_s }}
+  b.report("TokyoStore# D") { 10_000.times { |i| @tokyo.delete i.to_s }}
+  b.report("MemCacheD # D") { 10_000.times { |i| @memca.delete i.to_s }}
+  b.report("MemCacheT # D") { 10_000.times { |i| @memto.delete i.to_s }}
+  b.report("TokyoStore# +") { 10_000.times { |i| @tokyo.increment i.to_s }}
+  b.report("MemCacheD # +") { 10_000.times { |i| @memca.increment i.to_s }}
+  b.report("MemCacheT # +") { 10_000.times { |i| @memto.increment i.to_s }}
+  b.report("TokyoStore# -") { 10_000.times { |i| @tokyo.decrement i.to_s }}
+  b.report("MemCacheD # -") { 10_000.times { |i| @memca.decrement i.to_s }}
+  b.report("MemCacheT # -") { 10_000.times { |i| @memto.decrement i.to_s }}
+
  end
 
 puts
@@ -72,6 +85,21 @@ MemCacheT # OB   1.230000   0.230000   1.460000 (  1.856561)
 TokyoStore# R    0.620000   0.230000   0.850000 (  1.204192)
 MemCacheD # R    0.550000   0.110000   0.660000 (  0.748446)
 MemCacheT # R    1.490000   0.260000   1.750000 (  2.142504)
+TokyoStore# P    0.150000   0.090000   0.240000 (  0.393119)
+MemCacheD # P    0.640000   0.150000   0.790000 (  0.896260)
+MemCacheT # P    0.660000   0.170000   0.830000 (  0.966585)
+TokyoStore# E    0.120000   0.100000   0.220000 (  0.359803)
+MemCacheD # E    0.720000   0.130000   0.850000 (  0.969214)
+MemCacheT # E    0.820000   0.160000   0.980000 (  1.195356)
+TokyoStore# D    0.220000   0.170000   0.390000 (  0.707877)
+MemCacheD # D    0.560000   0.110000   0.670000 (  0.775865)
+MemCacheT # D    0.560000   0.140000   0.700000 (  0.860964)
+TokyoStore# +    0.230000   0.190000   0.420000 (  0.654690)
+MemCacheD # +    0.570000   0.130000   0.700000 (  0.801407)
+MemCacheT # +    0.540000   0.190000   0.730000 (  0.937882)
+TokyoStore# -    0.200000   0.210000   0.410000 (  0.669899)
+MemCacheD # -    0.600000   0.100000   0.700000 (  0.778212)
+MemCacheT # -    0.600000   0.140000   0.740000 (  0.983345)
 
 Tokyo # W   0.500000   0.100000   0.600000 (  1.189529)
 MemCa # W   2.390000   0.250000   2.640000 (  2.942472)
