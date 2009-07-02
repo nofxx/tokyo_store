@@ -57,7 +57,7 @@ module ActiveSupport
 
       def read(key, options = nil) # :nodoc:
         super
-        @data[key] ? Marshal.load(@data[key]) : nil
+        @data[key] ? Marshal.load(@data[key]).freeze : nil
         # if str = @data.get(key)
         #   Marshal.load str
         #   else
@@ -100,18 +100,17 @@ module ActiveSupport
       end
 
       def increment(key, amount = 1) # :nodoc:
-        write(key, read(key) + amount)
-        # TODO native?
+        #NATIVE, JUST SEE ABOUT MARSHAL
+        @data.incr(key, amount)
       end
 
       def decrement(key, amount = 1) # :nodoc:
-        write(key, read(key) - amount)
-        # log("decrement", key, amount)
-        #TODO native?
+        # WARNING! NATIVE, BUT UGLY
+        @data.incr(key, -amount)
       end
 
       def delete_matched(matcher, options = nil) # :nodoc:
-        #TODO - substring matching ?
+        #TODO
       end
 
       def clear

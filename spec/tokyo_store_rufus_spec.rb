@@ -40,6 +40,11 @@ describe "TokyoStore" do
       @cache.read('foo').should eql([1,2,3])
     end
 
+    it "should write integers" do
+      @cache.write('foo', 1)
+      @cache.read('foo').should eql(1)
+    end
+
     it "should read and write obj" do
       obj = City.new; obj.name = "Acapulco"; obj.pop = 717766
       @cache.write('foo', obj)
@@ -85,6 +90,21 @@ describe "TokyoStore" do
 
     it "should show some stats" do
       @cache.stats.should match(hash_including({ :type => "hash"}))
+    end
+
+    it "store objects should be immutable should be immutable" do
+      @cache.write('foo', 'bar')
+      lambda { @cache.read('foo').gsub!(/.*/, 'baz') }.should raise_error(ActiveSupport::FrozenObjectError)
+      @cache.read('foo').should ==  'bar'
+    end
+
+    it "should delete matched" do
+      @cache.write("val", 1)
+      @cache.write("value", 1)
+      @cache.write("not", 1)
+      @cache.delete_matched('val')
+
+      @cach
     end
 
     after(:all) do
