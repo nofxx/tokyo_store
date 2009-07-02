@@ -12,13 +12,19 @@ module ActiveSupport
     # - Per-request in memory cache for all communication with the Tokyo server(s).
     class TokyoStore < Store
 
-      def self.build_tokyo(*dbs)
-        dbs = dbs.flatten
-        options = dbs.extract_options!
-        dbs = ["localhost"] if dbs.empty?
-        Rufus::Tokyo::Tyrant.new(dbs[0], 45001)
+      def self.build_tokyo(*store)
+        store = store.flatten
+        options = store.extract_options!
+        #TODO: multiple instances
+        store = store.empty? ? ["localhost", 45001]  : store[0].split(":")
+
+        #TODO: Auto choice between tyrant ffi x tyrant pure ruby x cabinet C
+        # Tyrant FFI
+        Rufus::Tokyo::Tyrant.new(store[0], store[1].to_i)
+
+        # Cabinet C
         #hdb = HDB.new
-        # if !hdb.open(dbs[0], HDB::OWRITER | HDB::OCREAT)
+        # if !hdb.open(store[0], HDB::OWRITER | HDB::OCREAT)
         #   ecode = hdb.ecode
         #   STDERR.printf("open error: %s\n", hdb.errmsg(ecode))
         # end
@@ -33,11 +39,11 @@ module ActiveSupport
       #
       # If no addresses are specified, then TokyoStore will connect to
       # localhost port 45001 (the default memcached port).
-      def initialize(*dbs)
-        if dbs.first.respond_to?(:get)
-          @data = dbs.first
+      def initialize(*store)
+        if store.first.respond_to?(:get)
+          @data = store.first
         else
-          @data = self.class.build_tokyo(*dbs)
+          @data = self.class.build_tokyo(*store)
         end
 
         extend Strategy::LocalCache
@@ -45,12 +51,13 @@ module ActiveSupport
 
       # Reads multiple keys from the cache.
       def read_multi(*keys)
-        #TODO @data.get_multi keys
+        keys.map { |k| read(k) }
+        #TODO native?
       end
 
       def read(key, options = nil) # :nodoc:
         super
-        Marshal.load(@data[key])
+        @data[key] ? Marshal.load(@data[key]) : nil
         # if str = @data.get(key)
         #   Marshal.load str
         #   else
@@ -82,7 +89,7 @@ module ActiveSupport
 
       def delete(key, options = nil) # :nodoc:
         super
-        !@data[key] = nil #, expires_in(options))
+        @data.delete(key) #= nil #, expires_in(options))
       end
 
       def exist?(key, options = nil) # :nodoc:
@@ -104,18 +111,19 @@ module ActiveSupport
       end
 
       def delete_matched(matcher, options = nil) # :nodoc:
-        #TODO
+        #TODO - substring matching ?
       end
 
       def clear
-        @data.flush_all
+        @data.clear
       end
 
       def stats
-        @data.stats
+        @data.stat
       end
 
       private
+        #TODO
         def expires_in(options)
           (options && options[:expires_in]) || 0
         end

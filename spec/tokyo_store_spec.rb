@@ -1,5 +1,6 @@
 require File.expand_path(File.dirname(__FILE__) + '/spec_helper')
 
+if ENV['CABINET']
 describe "TokyoStore" do
   it "should store fragment cache" do
     HDB.should_receive(:new).and_return(@mock_hdb = mock("HDB"))
@@ -38,4 +39,5 @@ describe "TokyoStore" do
     end
   end
 
+end
 end
