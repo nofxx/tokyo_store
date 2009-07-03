@@ -1,3 +1,4 @@
+# Code from http://github.com/jodosha/redis-store
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
 module Rack
