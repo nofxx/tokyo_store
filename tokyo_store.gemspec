@@ -6,7 +6,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Marcos Piccinini"]
-  s.date = %q{2009-07-02}
+  s.date = %q{2009-07-03}
   s.email = %q{x@nofxx.com}
   s.extra_rdoc_files = [
     "LICENSE",
@@ -20,11 +20,11 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION",
      "benchmark/tokyo_store.rb",
-     "init.rb",
+     "lib/rack/session/tokyo.rb",
      "lib/tokyo_cache_store.rb",
-     "lib/tokyo_session_store.rb",
-     "rails/init.rb",
+     "lib/tokyo_store.rb",
      "spec/spec_helper.rb",
+     "spec/tokyo_session_store_spec.rb",
      "spec/tokyo_store_rufus_spec.rb",
      "spec/tokyo_store_spec.rb",
      "tokyo_store.gemspec"
@@ -37,7 +37,8 @@ Gem::Specification.new do |s|
   s.test_files = [
     "spec/tokyo_store_spec.rb",
      "spec/spec_helper.rb",
-     "spec/tokyo_store_rufus_spec.rb"
+     "spec/tokyo_store_rufus_spec.rb",
+     "spec/tokyo_session_store_spec.rb"
   ]
 
   if s.respond_to? :specification_version then
