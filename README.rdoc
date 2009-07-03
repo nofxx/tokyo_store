@@ -2,13 +2,14 @@
 
 Rack based Tokyo stored (FAST!) Rails session store.
 
-http://github.com/nofxx/tokyo_store
+Code:: http://github.com/nofxx/tokyo_store
+Demo:: http://github.com/nofxx/tokyo_webapps under rails/session
 
 
 == Require
 
-Tokyo Cabinet/Tyrant:: http://tokyocabinet.sourceforge.net/
-Rufus Tokyo:: http://github.com/jmettraux/rufus-tokyo/tree
+Tokyo Cabinet/Tyrant:: http://tokyocabinet.sourceforge.net
+Rufus Tokyo:: http://github.com/jmettraux/rufus-tokyo
 
 
 == Install
