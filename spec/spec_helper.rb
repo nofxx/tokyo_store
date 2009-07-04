@@ -6,7 +6,7 @@ require 'rack'
 # $LOAD_PATH.unshift(File.join(File.dirname(__FILE__), '..', 'lib'))
 require 'tokyo_store'
 require 'rack/session/tokyo'
-#require 'rack/cache/tokyo'
+require 'rack/cache/tokyo_store'
 #ENV["RAILS_ENV"] = "test"
 require 'activesupport'
 require 'active_support'
