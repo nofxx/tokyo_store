@@ -5,20 +5,16 @@ module Rack
       DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge :tyrant_server => "localhost:1978"
 
       def initialize(app, options = {})
-        # Support old :expires option
         #options[:expire_after] ||= options[:expires]
+        # @default_options = { namespace => 'rack:session'}.merge(@default_options)
         super
         @mutex = Mutex.new
-        # @default_options = {        #   :namespace => 'rack:session',        # }.merge(@default_options)
-        host, port = *@default_options[:tyrant_server].split(":") # @default_options)        #options[:cache] ||
+        host, port = *options[:tyrant_server] || @default_options[:tyrant_server].split(":") # @default_options)        #options[:cache] ||
         begin
           @pool =  Rufus::Tokyo::Tyrant.new(host, port.to_i)
         rescue => e
           "No server avaiable or #{e}"
         end
-        # unless @pool.servers.any? { |s| s.alive? }
-        #   raise "#{self} unable to find server during initialization."
-        # end
       end
 
       def generate_sid
@@ -30,12 +26,11 @@ module Rack
 
       private
       def get_session(env, sid)
-        session = Marshal.load(@pool[sid]) if sid && sid != "" #sid ||= generate_sid
+        session = Marshal.load(@pool[sid]) if sid
         @mutex.lock if env['rack.multithread']
-        unless sid and session
+        unless sid && session
           env['rack.errors'].puts("Session '#{sid.inspect}' not found, initializing...") if $VERBOSE and not sid.nil?
-          session = {}
-          sid = generate_sid
+          session, sid = {}, generate_sid
           ret = @pool[sid] = Marshal.dump(session)
           raise "Session collision on '#{sid.inspect}'" unless ret
         end
@@ -49,20 +44,20 @@ module Rack
 
       def set_session(env, sid, new_session, options)
         @mutex.lock if env['rack.multithread']
-        session = Marshal.load(@pool[sid]) rescue {}
-        if options[:renew] or options[:drop]
-          @pool.delete sid
+        session = Marshal.load(session) if session = @pool[sid]
+        if options[:renew] || options[:drop]
+          p @pool.delete sid
           return false if options[:drop]
           sid = generate_sid
-          @pool[sid] = 0
+          @pool[sid] = "\004\bi\000" # 0 marshalled
         end
         old_session = new_session.instance_variable_get('@old') || {}
-        session = merge_sessions sid, old_session, new_session, session
+        session = merge_sessions sid, old_session, new_session, (session || {})
         @pool[sid] = Marshal.dump(session) #, options])
         return sid
       rescue => e
-        warn "#{self} is unable to find server. #{e}"
-        warn $!.inspect
+        warn "#{self} set problem. Error: #{e} | pool: #{@pool.inspect} | session_id: #{sid.inspect} | session: #{session.inspect}"
+        # warn $!.inspect
         return false
       ensure
         @mutex.unlock if env['rack.multithread']

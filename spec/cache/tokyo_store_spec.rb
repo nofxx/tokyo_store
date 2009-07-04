@@ -1,23 +1,23 @@
-require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
+require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe "TokyoStore" do
   it "should store fragment cache" do
     Rufus::Tokyo::Tyrant.should_receive(:new).and_return(@mock_tyrant = mock("Tyrant"))
-    store = Rack::Cache.lookup_store :tokyo_store, "data.tch"
-    store.should be_kind_of Rack::Cache::TokyoStore
+    store = ActiveSupport::Cache.lookup_store :tokyo_store, "data.tch"
+    store.should be_kind_of ActiveSupport::Cache::TokyoStore
   end
 
   it "should fail" do
     tokyo = Rufus::Tokyo::Tyrant.new('localhost', 1978)
     Rufus::Tokyo::Tyrant.should_not_receive(:new)
-    store = Rack::Cache.lookup_store :tokyo_store, tokyo
-    store.should be_kind_of Rack::Cache::TokyoStore
+    store = ActiveSupport::Cache.lookup_store :tokyo_store, tokyo
+    store.should be_kind_of ActiveSupport::Cache::TokyoStore
   end
 
   describe "Similar" do
 
     before(:each) do
-      @cache = Rack::Cache::TokyoStore.new 'localhost:1978'
+      @cache = ActiveSupport::Cache::TokyoStore.new 'localhost:1978'
       @cache.clear
     end
 
@@ -113,7 +113,7 @@ describe "TokyoStore" do
 
     it "should clear all" do
       @cache.increment("val")
-      @cache.exist?("val").should be_true
+      @cache.exist?("val", :raw => true).should be_true
       @cache.clear
       @cache.exist?("val").should be_false
     end
@@ -125,12 +125,13 @@ describe "TokyoStore" do
     it "store objects should be immutable" do
       @cache.with_local_cache do
         @cache.write('foo', 'bar')
-        @cache.read('foo').gsub!(/.*/, 'baz')# }.should raise_error(Rack::FrozenObjectError)
+        @cache.read('foo').gsub!(/.*/, 'baz')# }.should raise_error(ActiveSupport::FrozenObjectError)
         @cache.read('foo').should ==  'bar'
       end
     end
 
     it "stored objects should not be frozen" do
+      pending "It's on the rails tests..."
       @cache.with_local_cache do
         @cache.write('foo', 'bar')
       end
@@ -150,7 +151,7 @@ describe "TokyoStore" do
 
   describe "backed store" do
     before(:each) do
-      @cache = Rack::Cache.lookup_store(:tokyo_store)
+      @cache = ActiveSupport::Cache.lookup_store(:tokyo_store)
       @data = @cache.instance_variable_get(:@data)
       @cache.clear
     end

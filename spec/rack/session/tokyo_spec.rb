@@ -29,8 +29,8 @@ module Rack
       it "should specify connection params" do
         pool = Rack::Session::Tokyo.new(@incrementor, :tokyo_server => "localhost:6380/1").pool
         pool.should be_kind_of(Rufus::Tokyo::Tyrant)
-        pool.host.should == "localhost"
-        pool.port.should == 1978
+        pool.host.should eql("localhost")
+        pool.port.should eql(1978)
 
         # pool = Rack::Session::Tokyo.new(@incrementor, :tokyo_server => ["localhost:6379", "localhost:6380"]).pool
         # pool.should be_kind_of(DistributedMarshaledTokyo)
@@ -40,7 +40,7 @@ module Rack
         pool = Rack::Session::Tokyo.new(@incrementor)
         res = Rack::MockRequest.new(pool).get("/")
         res["Set-Cookie"].should match(/#{@session_key}=/)
-        res.body.should == '{"counter"=>1}'
+        res.body.should eql('{"counter"=>1}')
       end
 
       it "determines session from a cookie" do
@@ -48,35 +48,34 @@ module Rack
         req = Rack::MockRequest.new(pool)
         res = req.get("/")
         cookie = res["Set-Cookie"]
-        req.get("/", "HTTP_COOKIE" => cookie).
-          body.should == '{"counter"=>2}'
-        req.get("/", "HTTP_COOKIE" => cookie).
-          body.should == '{"counter"=>3}'
+        req.get("/", "HTTP_COOKIE" => cookie).body.should eql('{"counter"=>2}')
+        req.get("/", "HTTP_COOKIE" => cookie).body.should eql('{"counter"=>3}')
       end
 
       it "survives nonexistant cookies" do
         bad_cookie = "rack.session=blarghfasel"
         pool = Rack::Session::Tokyo.new(@incrementor)
-        res = Rack::MockRequest.new(pool).
-          get("/", "HTTP_COOKIE" => bad_cookie)
-        res.body.should == '{"counter"=>1}'
+        res = Rack::MockRequest.new(pool).get("/", "HTTP_COOKIE" => bad_cookie)
+        res.body.should eql('{"counter"=>1}')
         cookie = res["Set-Cookie"][@session_match]
         cookie.should_not match(/#{bad_cookie}/)
       end
 
-      it "should maintain freshness" do
-        pool = Rack::Session::Tokyo.new(@incrementor, :expire_after => 3)
-        res = Rack::MockRequest.new(pool).get('/')
-        res.body.should include('"counter"=>1')
-        cookie = res["Set-Cookie"]
-        res = Rack::MockRequest.new(pool).get('/', "HTTP_COOKIE" => cookie)
-        res["Set-Cookie"].should == cookie
-        res.body.should include('"counter"=>2')
-        puts 'Sleeping to expire session' if $DEBUG
-        sleep 4
-        res = Rack::MockRequest.new(pool).get('/', "HTTP_COOKIE" => cookie)
-        res["Set-Cookie"].should_not == cookie
-        res.body.should include('"counter"=>1')
+      if ENV['SLEEP']
+        it "should maintain freshness" do
+          pool = Rack::Session::Tokyo.new(@incrementor, :expire_after => 3)
+          res = Rack::MockRequest.new(pool).get('/')
+          res.body.should include('"counter"=>1')
+          cookie = res["Set-Cookie"]
+          res = Rack::MockRequest.new(pool).get('/', "HTTP_COOKIE" => cookie)
+          res["Set-Cookie"].should == cookie
+          res.body.should include('"counter"=>2')
+          puts 'Sleeping to expire session' if $DEBUG
+          sleep 4
+          res = Rack::MockRequest.new(pool).get('/', "HTTP_COOKIE" => cookie)
+          res["Set-Cookie"].should_not == cookie
+          res.body.should include('"counter"=>1')
+        end
       end
 
       it "deletes cookies with :drop option" do
