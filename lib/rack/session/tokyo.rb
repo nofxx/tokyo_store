@@ -6,7 +6,7 @@ module Rack
 
       def initialize(app, options = {})
         #options[:expire_after] ||= options[:expires]
-        # @default_options = { namespace => 'rack:session'}.merge(@default_options)
+        # @default_options = {       #   :namespace => 'rack:session',        # }.merge(@default_options)
         super
         @mutex = Mutex.new
         host, port = *options[:tyrant_server] || @default_options[:tyrant_server].split(":") # @default_options)        #options[:cache] ||
@@ -28,9 +28,10 @@ module Rack
       def get_session(env, sid)
         session = Marshal.load(@pool[sid]) if sid
         @mutex.lock if env['rack.multithread']
-        unless sid && session
+        unless sid and session
           env['rack.errors'].puts("Session '#{sid.inspect}' not found, initializing...") if $VERBOSE and not sid.nil?
-          session, sid = {}, generate_sid
+          session = {}
+          sid = generate_sid
           ret = @pool[sid] = Marshal.dump(session)
           raise "Session collision on '#{sid.inspect}'" unless ret
         end
@@ -44,20 +45,20 @@ module Rack
 
       def set_session(env, sid, new_session, options)
         @mutex.lock if env['rack.multithread']
-        session = Marshal.load(session) if session = @pool[sid]
-        if options[:renew] || options[:drop]
-          p @pool.delete sid
+        session = Marshal.load(@pool[sid]) rescue {}
+        if options[:renew] or options[:drop]
+          @pool.delete sid
           return false if options[:drop]
           sid = generate_sid
-          @pool[sid] = "\004\bi\000" # 0 marshalled
+          @pool[sid] = "0"
         end
         old_session = new_session.instance_variable_get('@old') || {}
-        session = merge_sessions sid, old_session, new_session, (session || {})
+        session = merge_sessions sid, old_session, new_session, session
         @pool[sid] = Marshal.dump(session) #, options])
         return sid
       rescue => e
-        warn "#{self} set problem. Error: #{e} | pool: #{@pool.inspect} | session_id: #{sid.inspect} | session: #{session.inspect}"
-        # warn $!.inspect
+        warn "#{self} is unable to find server, error: #{e}"
+        warn $!.inspect
         return false
       ensure
         @mutex.unlock if env['rack.multithread']
