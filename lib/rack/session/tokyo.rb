@@ -5,8 +5,6 @@ module Rack
       DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge :tyrant_server => "localhost:1978"
 
       def initialize(app, options = {})
-        #options[:expire_after] ||= options[:expires]
-        # @default_options = {       #   :namespace => 'rack:session',        # }.merge(@default_options)
         super
         @mutex = Mutex.new
         host, port = *options[:tyrant_server] || @default_options[:tyrant_server].split(":") # @default_options)        #options[:cache] ||
@@ -26,9 +24,9 @@ module Rack
 
       private
       def get_session(env, sid)
-        session = Marshal.load(@pool[sid]) if sid
         @mutex.lock if env['rack.multithread']
-        unless sid and session
+        session = Marshal.load(@pool[sid]) rescue session if sid
+        unless sid && session
           env['rack.errors'].puts("Session '#{sid.inspect}' not found, initializing...") if $VERBOSE and not sid.nil?
           session = {}
           sid = generate_sid
@@ -45,16 +43,16 @@ module Rack
 
       def set_session(env, sid, new_session, options)
         @mutex.lock if env['rack.multithread']
-        session = Marshal.load(@pool[sid]) rescue {}
-        if options[:renew] or options[:drop]
+        session = Marshal.load(session) if session = @pool[sid]
+        if options[:renew] || options[:drop]
           @pool.delete sid
           return false if options[:drop]
           sid = generate_sid
-          @pool[sid] = "0"
+          @pool[sid] = ""
         end
         old_session = new_session.instance_variable_get('@old') || {}
         session = merge_sessions sid, old_session, new_session, session
-        @pool[sid] = Marshal.dump(session) #, options])
+        @pool[sid] = options && options[:raw] ? session : Marshal.dump(session)
         return sid
       rescue => e
         warn "#{self} is unable to find server, error: #{e}"
@@ -64,8 +62,7 @@ module Rack
         @mutex.unlock if env['rack.multithread']
       end
 
-      def merge_sessions(sid, old, new, cur=nil)
-        cur ||= {}
+      def merge_sessions(sid, old, new, cur={})
         unless Hash === old and Hash === new
           warn 'Bad old or new sessions provided.'
           return cur

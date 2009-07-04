@@ -53,7 +53,7 @@ module Rack
       end
 
       it "survives nonexistant cookies" do
-        bad_cookie = "rack.session=blarghfasel"
+        bad_cookie = "rack.session=blsarghfasel"
         pool = Rack::Session::Tokyo.new(@incrementor)
         res = Rack::MockRequest.new(pool).get("/", "HTTP_COOKIE" => bad_cookie)
         res.body.should eql('{"counter"=>1}')
@@ -61,22 +61,21 @@ module Rack
         cookie.should_not match(/#{bad_cookie}/)
       end
 
-      if ENV['SLEEP']
-        it "should maintain freshness" do
-          pool = Rack::Session::Tokyo.new(@incrementor, :expire_after => 3)
-          res = Rack::MockRequest.new(pool).get('/')
-          res.body.should include('"counter"=>1')
-          cookie = res["Set-Cookie"]
-          res = Rack::MockRequest.new(pool).get('/', "HTTP_COOKIE" => cookie)
-          res["Set-Cookie"].should == cookie
-          res.body.should include('"counter"=>2')
-          puts 'Sleeping to expire session' if $DEBUG
-          sleep 4
-          res = Rack::MockRequest.new(pool).get('/', "HTTP_COOKIE" => cookie)
-          res["Set-Cookie"].should_not == cookie
-          res.body.should include('"counter"=>1')
-        end
-      end
+      # Expire isn't supported by cabinet. Implement in ruby?
+      # it "should maintain freshness" do
+      #   pool = Rack::Session::Tokyo.new(@incrementor, :expire_after => 3)
+      #   res = Rack::MockRequest.new(pool).get('/')
+      #   res.body.should include('"counter"=>1')
+      #   cookie = res["Set-Cookie"]
+      #   res = Rack::MockRequest.new(pool).get('/', "HTTP_COOKIE" => cookie)
+      #   res["Set-Cookie"].should == cookie
+      #   res.body.should include('"counter"=>2')
+      #   puts 'Sleeping to expire session' if $DEBUG
+      #   sleep 4
+      #   res = Rack::MockRequest.new(pool).get('/', "HTTP_COOKIE" => cookie)
+      #   res["Set-Cookie"].should_not == cookie
+      #   res.body.should include('"counter"=>1')
+      # end
 
       it "deletes cookies with :drop option" do
         pool = Rack::Session::Tokyo.new(@incrementor)
@@ -231,6 +230,10 @@ module Rack
         session.size.should == r.size+1
         session['counter'].should be_nil
         session['foo'].should == 'bar'
+      end
+
+      after(:all) do
+         Rack::Session::Tokyo.new(@incrementor).pool.clear
       end
     end
   end
