@@ -1,6 +1,6 @@
-# require 'rufus/tokyo/tyrant'
+require 'rufus/tokyo/tyrant'
 # require 'tokyocabinet'
-module Rack
+module ActiveSupport
   module Cache
 
     # A cache store implementation which stores data in Tokyo Cabinet
