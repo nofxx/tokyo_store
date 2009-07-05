@@ -13,76 +13,57 @@ require 'cache/rails/redis_store'
 P = "x" * 100
 M = P * 10
 G = M * 10
-X = { :small => P, :medium => M, :big => G}
+A = [P, M, G]
+X = { :small => P, :medium => M, :big => G }
+class User; attr_accessor :name, :info; end
+u = User.new; u.name = P; u.info = G
+O = u
+T = 10_000
 
 #TODO: Cabinet & memcached C bindings
-@tokyo = ActiveSupport::Cache.lookup_store :tokyo_store, "localhost:1978"
-@memca = ActiveSupport::Cache.lookup_store :mem_cache_store, "localhost:11211"
-@memto = ActiveSupport::Cache.lookup_store :mem_cache_store, "localhost:1978"
-@redis = ActiveSupport::Cache.lookup_store :redis_store, "localhost:6379"
+TEST = {
+ "TokyoStore" => ActiveSupport::Cache.lookup_store(:tokyo_store, "localhost:1978"),
+ "MemTokyo"   => ActiveSupport::Cache.lookup_store(:mem_cache_store, "localhost:1978"),
+ "RedisStore" => ActiveSupport::Cache.lookup_store(:redis_store, "localhost:6379"),
+ "MemCache"   => ActiveSupport::Cache.lookup_store(:mem_cache_store, "localhost:11211"),
+}
 
 puts " Write"
-puts "--------------"
+puts "----------"
 Benchmark.bmbm do |b|
-  b.report("TokyoStore# P") { 10_000.times { |i| @tokyo.write i.to_s, P }}
-  b.report("RedisStore# P") { 10_000.times { |i| @redis.write i.to_s, P }}
-  b.report("MemCacheD # P") { 10_000.times { |i| @memca.write i.to_s, P }}
-  b.report("MemCacheT # P") { 10_000.times { |i| @memto.write i.to_s, P }}
-  b.report("TokyoStore# M") { 10_000.times { |i| @tokyo.write i.to_s, M }}
-  b.report("RedisStore# M") { 10_000.times { |i| @redis.write i.to_s, M }}
-  b.report("MemCacheD # M") { 10_000.times { |i| @memca.write i.to_s, M }}
-  b.report("MemCacheT # M") { 10_000.times { |i| @memto.write i.to_s, M }}
-  b.report("TokyoStore# G") { 10_000.times { |i| @tokyo.write i.to_s, G }}
-  b.report("RedisStore# G") { 10_000.times { |i| @redis.write i.to_s, G }}
-  b.report("MemCacheD # G") { 10_000.times { |i| @memca.write i.to_s, G }}
-  b.report("MemCacheT # G") { 10_000.times { |i| @memto.write i.to_s, G }}
-  b.report("TokyoStore# D") { 10_000.times { |i| @tokyo.delete i.to_s }}
-  b.report("RedisStore# D") { 10_000.times { |i| @redis.delete i.to_s }}
-  b.report("MemCacheD # D") { 10_000.times { |i| @memca.delete i.to_s }}
-  b.report("MemCacheT # D") { 10_000.times { |i| @memto.delete i.to_s }}
-  b.report("TokyoStore# +") { 10_000.times { |i| @tokyo.increment i.to_s }}
-  b.report("RedisStore# +") { 10_000.times { |i| @redis.increment i.to_s }}
-  b.report("MemCacheD # +") { 10_000.times { |i| @memca.increment i.to_s }}
-  b.report("MemCacheT # +") { 10_000.times { |i| @memto.increment i.to_s }}
-  b.report("TokyoStore# -") { 10_000.times { |i| @tokyo.decrement i.to_s }}
-  b.report("RedisStore# -") { 10_000.times { |i| @redis.decrement i.to_s }}
-  b.report("MemCacheD # -") { 10_000.times { |i| @memca.decrement i.to_s }}
-  b.report("MemCacheT # -") { 10_000.times { |i| @memto.decrement i.to_s }}
+  TEST.each_pair do |k,s|
+    b.report("#{k} P") { T.times { |i| s.write i.to_s, P }}
+    b.report("#{k} M") { T.times { |i| s.write i.to_s, M }}
+    b.report("#{k} G") { T.times { |i| s.write i.to_s, G }}
+    b.report("#{k} Obj") { T.times { |i| s.write i.to_s, O }}
+    b.report("#{k} Hash") { T.times { |i| s.write i.to_s, X }}
+    b.report("#{k} Array") { T.times { |i| s.write i.to_s, A }}
+    b.report("#{k} Delete") { T.times { |i| s.delete i.to_s }}
+    b.report("#{k} +") { T.times { |i| s.increment i.to_s }}
+    b.report("#{k} -") { T.times { |i| s.decrement i.to_s }}
+  end
 end
 
 puts " Read"
-10_000.times { |i| @tokyo.write i.to_s, G }
-10_000.times { |i| @redis.write i.to_s, G }
-10_000.times { |i| @memca.write i.to_s, G }
-10_000.times { |i| @memto.write i.to_s, G }
-puts "--------------"
+puts "----------"
+TEST.each { |p| 10_000.times { |i| p[1].write i.to_s, G }}
 #TODO: implement read with diff data.
 Benchmark.bmbm do |b|
-  b.report("TokyoStore# Seq") { 10_000.times { |i| @tokyo.read i.to_s }}
-  b.report("RedisStore# Seq") { 10_000.times { |i| @redis.read i.to_s }}
-  b.report("MemCacheD # Seq") { 10_000.times { |i| @memca.read i.to_s }}
-  b.report("MemCacheT # Seq") { 10_000.times { |i| @memto.read i.to_s }}
-  b.report("TokyoStore# Rand") { 10_000.times { |i| @tokyo.read rand(i).to_s }}
-  b.report("RedisStore# Rand") { 10_000.times { |i| @tokyo.read rand(i).to_s }}
-  b.report("MemCacheD # Rand") { 10_000.times { |i| @memca.read rand(i).to_s }}
-  b.report("MemCacheT # Rand") { 10_000.times { |i| @memto.read rand(i).to_s }}
-  b.report("TokyoStore# Exist") { 10_000.times { |i| @tokyo.exist? i.to_s }}
-  b.report("RedisStore# Exist") { 10_000.times { |i| @tokyo.exist? i.to_s }}
-  b.report("MemCacheD # Exist") { 10_000.times { |i| @memca.exist? i.to_s }}
-  b.report("MemCacheT # Exist") { 10_000.times { |i| @memto.exist? i.to_s }}
+  TEST.each_pair do |k,s|
+    k = s.class.to_s.split("::")[-1]
+    b.report("#{k} Seq") { T.times { |i| s.read rand(i).to_s }}
+    b.report("#{k} Rand") { T.times { |i| s.read rand(i).to_s }}
+    b.report("#{k} Exist") { T.times { |i| s.exist? i.to_s }}
+  end
 end
 
 puts
 thr = []
 Benchmark.bmbm do |b|
-  b.report("Tokyo # W") {  100.times { |j| thr << Thread.new { 100.times { |i| @tokyo.write "#{j}-#{i}", X }}};  thr.each { |t| t.join }; thr = [] }
-  b.report("Redis # W") {  100.times { |j| thr << Thread.new { 100.times { |i| @tokyo.write "#{j}-#{i}", X }}};  thr.each { |t| t.join }; thr = [] }
-  b.report("MemCa # W") {  100.times { |j| thr << Thread.new { 100.times { |i| @memca.write "#{j}-#{i}", X}}};  thr.each { |t| t.join }; thr = [] }
-  b.report("MemTo # W") {  100.times { |j| thr << Thread.new { 100.times { |i| @memto.write "#{j}-#{i}", X}}};  thr.each { |t| t.join }; thr = [] }
-  b.report("Tokyo # R") {  100.times { |j| thr << Thread.new { 100.times { |i| @tokyo.read "#{j}-#{i}" }}};  thr.each { |t| t.join }; thr = [] }
-  b.report("Redis # R") {  100.times { |j| thr << Thread.new { 100.times { |i| @tokyo.read "#{j}-#{i}" }}};  thr.each { |t| t.join }; thr = [] }
-  b.report("MemCa # R") {  100.times { |j| thr << Thread.new { 100.times { |i| @memca.read "#{j}-#{i}"}}};  thr.each { |t| t.join }; thr = [] }
-  b.report("MemTo # R") {  100.times { |j| thr << Thread.new { 100.times { |i| @memto.read "#{j}-#{i}"}}};  thr.each { |t| t.join }; thr = [] }
+  TEST.each_pair do |k,s|
+    b.report("#{k} TW") { 100.times { |j| thr << Thread.new { 100.times { |i| s.write "#{j}-#{i}", X }}};  thr.each { |t| t.join }; thr = [] }
+    b.report("#{k} TR") { 100.times { |j| thr << Thread.new { 100.times { |i| s.read "#{j}-#{i}" }}};  thr.each { |t| t.join }; thr = [] }
+  end
 end
 
 __END__
