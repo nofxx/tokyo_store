@@ -15,13 +15,6 @@ module Rack
         end
       end
 
-      def generate_sid
-        loop do
-          sid = super
-          break sid unless @pool[sid]
-        end
-      end
-
       private
       def get_session(env, sid)
         @mutex.lock if env['rack.multithread']
@@ -43,7 +36,7 @@ module Rack
 
       def set_session(env, sid, new_session, options)
         @mutex.lock if env['rack.multithread']
-        session = Marshal.load(session) if session = @pool[sid]
+        session = Marshal.load(session) rescue session if session = @pool[sid]
         if options[:renew] || options[:drop]
           @pool.delete sid
           return false if options[:drop]
@@ -77,6 +70,13 @@ module Rack
         update.each{|k| cur[k] = new[k] }
 
         cur
+      end
+
+      def generate_sid
+        loop do
+          sid = super
+          break sid unless @pool[sid]
+        end
       end
 
     end
