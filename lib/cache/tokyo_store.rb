@@ -6,6 +6,7 @@ module ActiveSupport
     # A cache store implementation which stores data in Tokyo Cabinet
     #
     # Special features:
+    # - Substring match
     # - Clustering and load balancing. TODO
     # - Time-based expiry support. TODO (Lua)
     # - Per-request in memory cache for all communication with the Tokyo server(s).
@@ -109,7 +110,8 @@ module ActiveSupport
       end
 
       def delete_matched(matcher, options = nil) # :nodoc:
-        #TODO @data.ldelete?
+        super
+        @data.delete_keys_with_prefix(matcher)
       end
 
       def clear

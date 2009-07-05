@@ -141,10 +141,13 @@ describe "TokyoStore" do
     end
 
     it "should delete matched" do
-      @cache.write("val", 1)
-      @cache.write("value", 1)
-      @cache.write("not", 1)
+      ["val", "value", "vall", "val/1", "vla", "xla", "xla/1"].each do |v|
+        @cache.write(v, 1)
+      end
+
       @cache.delete_matched('val')
+      ["val", "value", "vall", "val/1"].each { |v| @cache.read(v).should be_nil }
+      ["vla", "xla", "xla/1"].each { |v| @cache.read(v).should eql(1) }
     end
 
   end
