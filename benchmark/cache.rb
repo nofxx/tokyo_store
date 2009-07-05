@@ -18,7 +18,7 @@ X = { :small => P, :medium => M, :big => G }
 class User; attr_accessor :name, :info; end
 u = User.new; u.name = P; u.info = G
 O = u
-T = 10_000
+T = ARGV[0].to_i || 10000
 
 #TODO: Cabinet & memcached C bindings
 TEST = {
@@ -61,14 +61,15 @@ puts
 thr = []
 Benchmark.bmbm do |b|
   TEST.each_pair do |k,s|
-    b.report("#{k} TW") { 100.times { |j| thr << Thread.new { 100.times { |i| s.write "#{j}-#{i}", X }}};  thr.each { |t| t.join }; thr = [] }
-    b.report("#{k} TR") { 100.times { |j| thr << Thread.new { 100.times { |i| s.read "#{j}-#{i}" }}};  thr.each { |t| t.join }; thr = [] }
+    b.report("#{k} TW") { (T/2).times { |j| thr << Thread.new { (T/2).times { |i| s.write "#{j}-#{i}", X }}};  thr.each { |t| t.join }; thr = [] }
+    b.report("#{k} TR") { (T/2).times { |j| thr << Thread.new { (T/2).times { |i| s.read "#{j}-#{i}" }}};  thr.each { |t| t.join }; thr = [] }
   end
 end
 
 __END__
 
-
+*NOTE: Redis and Memcache support native expiration, Tokyo doesn't.
+Wondering the impact of this feature written in ruby...
 
 Core 2 Duo 8500 - 3.16Ghz
 ------------------------------------------------------------

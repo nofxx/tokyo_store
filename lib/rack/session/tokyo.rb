@@ -48,9 +48,13 @@ module Rack
         @pool[sid] = options && options[:raw] ? session : Marshal.dump(session)
         return sid
       rescue => e
+        if e =~ /refused/
         warn "#{self} is unable to find server, error: #{e}"
         warn $!.inspect
         return false
+        else
+          raise e
+        end
       ensure
         @mutex.unlock if env['rack.multithread']
       end
