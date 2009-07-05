@@ -2,11 +2,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{tokyo_store}
-  s.version = "0.1.8"
+  s.version = "0.1.9"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Marcos Piccinini"]
-  s.date = %q{2009-07-04}
+  s.date = %q{2009-07-05}
   s.email = %q{x@nofxx.com}
   s.extra_rdoc_files = [
     "LICENSE",
@@ -20,6 +20,7 @@ Gem::Specification.new do |s|
      "Rakefile",
      "VERSION",
      "benchmark/cache.rb",
+     "benchmark/session.rb",
      "lib/cache/tokyo_store.rb",
      "lib/rack/cache/tokyo_entitystore.rb",
      "lib/rack/cache/tokyo_metastore.rb",

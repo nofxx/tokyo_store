@@ -1,7 +1,9 @@
 #
 # Tokyo Store
 #
-# Session Benchmark vs MemCacheStore on memcached and tyrant
+# Session Benchmark vs Redis Store
+#
+# TODO: memcache
 #
 $: << File.join(File.dirname(__FILE__), "/../lib")
 require 'rubygems'
@@ -54,6 +56,9 @@ end
 
 __END__
 
+*Note: Tokyo uses FFI adapter, while redis a pure ruby.
+Both comparable to memcache pr too. Check the cache benchmark.
+
 _____________________________________________  GET
 Tokyo   6.310000   1.030000   7.340000 (  8.511138)
 Redis   7.300000   1.010000   8.310000 (  9.325441)
@@ -65,6 +70,6 @@ Redis   3.960000   0.540000   4.500000 (  5.030627)
 -------------------------------- total: 8.380000sec
 
 _____________________________________________ EXIST
-Redis   4.700000   0.700000   5.400000 (  6.061131)
 Tokyo   4.090000   0.650000   4.740000 (  5.537898)
+Redis   4.700000   0.700000   5.400000 (  6.061131)
 ------------------------------- total: 10.140000sec

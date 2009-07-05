@@ -21,12 +21,12 @@ Rails (enviroment.rb)
   config.gem 'nofxx-tokyo_store', :lib => 'tokyo_store'
   ActionController::Base.session_store = Rack::Session::Tokyo
 
-
-== Run
-
-Just start tyrant
+Start Tyrant
 
   ttserver data.tch
+
+
+Have fun!
 
 
 == Thanks
