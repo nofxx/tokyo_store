@@ -3,6 +3,9 @@ require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
 module Rack
   module Session
+    # class Tokyo
+    #   attr_reader :
+    # end
     describe "Rack::Session::Tokyo" do
       before(:each) do
         @session_key = Rack::Session::Tokyo::DEFAULT_OPTIONS[:key]
@@ -27,14 +30,20 @@ module Rack
       end
 
       it "should specify connection params" do
-        pool = Rack::Session::Tokyo.new(@incrementor, :tokyo_server => "localhost:6380/1").pool
+        pool = Rack::Session::Tokyo.new(@incrementor, :tyrant_server => "127.0.0.1:1978").pool
         pool.should be_kind_of(Rufus::Tokyo::Tyrant)
-        pool.host.should eql("localhost")
+        pool.host.should eql("127.0.0.1")
         pool.port.should eql(1978)
 
         # pool = Rack::Session::Tokyo.new(@incrementor, :tokyo_server => ["localhost:6379", "localhost:6380"]).pool
         # pool.should be_kind_of(DistributedMarshaledTokyo)
       end
+
+      it "should raise tokyo error on connect" do
+        lambda{ Rack::Session::Tokyo.new(@incrementor, :tyrant_server => "localhost:6380").pool }.
+          should_not raise_error(Rufus::Tokyo::TokyoError)
+      end
+
 
       it "creates a new cookie" do
         pool = Rack::Session::Tokyo.new(@incrementor)

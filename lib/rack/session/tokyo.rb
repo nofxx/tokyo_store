@@ -7,18 +7,22 @@ module Rack
       def initialize(app, options = {})
         super
         @mutex = Mutex.new
-        host, port = *options[:tyrant_server] || @default_options[:tyrant_server].split(":") # @default_options)        #options[:cache] ||
-        begin
-          @pool =  Rufus::Tokyo::Tyrant.new(host, port.to_i)
-        rescue => e
-          "No server avaiable or #{e}"
-        end
+        @host, @port = *(options[:tyrant_server] || @default_options[:tyrant_server]).split(":") # @default_options)        #options[:cache] ||
+        tokyo_connect
       end
 
       private
+      def tokyo_connect
+        begin
+          @pool = Rufus::Tokyo::Tyrant.new(@host, @port.to_i)
+        rescue Rufus::Tokyo::TokyoError => e
+          warn "Can't connect to Tyrant #{e}"
+        end
+      end
+
       def get_session(env, sid)
         @mutex.lock if env['rack.multithread']
-        session = Marshal.load(@pool[sid]) rescue session if sid
+        session = Marshal.load(@pool[sid]) rescue session if sid && session = @pool[sid]
         unless sid && session
           env['rack.errors'].puts("Session '#{sid.inspect}' not found, initializing...") if $VERBOSE and not sid.nil?
           session = {}
@@ -28,7 +32,7 @@ module Rack
         end
         session.instance_variable_set('@old', {}.merge(session))
         return [sid, session]
-      rescue => e
+      rescue Rufus::Tokyo::TokyoError => e
         session = {}
       ensure
         @mutex.unlock if env['rack.multithread']
@@ -44,36 +48,14 @@ module Rack
           @pool[sid] = ""
         end
         old_session = new_session.instance_variable_get('@old') || {}
-        session = merge_sessions sid, old_session, new_session, session
+        session = new_session
         @pool[sid] = options && options[:raw] ? session : Marshal.dump(session)
         return sid
-      rescue => e
-        if e =~ /refused/
+      rescue Rufus::Tokyo::TokyoError => e
         warn "#{self} is unable to find server, error: #{e}"
         warn $!.inspect
-        return false
-        else
-          raise e
-        end
       ensure
         @mutex.unlock if env['rack.multithread']
-      end
-
-      def merge_sessions(sid, old, new, cur={})
-        unless Hash === old and Hash === new
-          warn 'Bad old or new sessions provided.'
-          return cur
-        end
-
-        delete = old.keys - new.keys
-        warn "//@#{sid}: dropping #{delete*','}" if $DEBUG and not delete.empty?
-        delete.each{|k| cur.delete k }
-
-        update = new.keys.select{|k| new[k] != old[k] }
-        warn "//@#{sid}: updating #{update*','}" if $DEBUG and not update.empty?
-        update.each{|k| cur[k] = new[k] }
-
-        cur
       end
 
       def generate_sid
