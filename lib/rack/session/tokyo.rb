@@ -8,7 +8,10 @@ module Rack
         super
         @mutex = Mutex.new
         @host, @port = *(options[:tyrant_server] || @default_options[:tyrant_server]).split(":") # @default_options)        #options[:cache] ||
-        tokyo_connect
+        # connecting & closing on each get and put
+        # not sure if this is the best option, but otherwise it'll keep
+        # opening connections until tyrant freezes... =/
+        # tokyo_connect
       end
 
       private
@@ -21,6 +24,7 @@ module Rack
       end
 
       def get_session(env, sid)
+        tokyo_connect
         @mutex.lock if env['rack.multithread']
         session = Marshal.load(@pool[sid]) rescue session if sid && session = @pool[sid]
         unless sid && session
@@ -36,9 +40,11 @@ module Rack
         session = {}
       ensure
         @mutex.unlock if env['rack.multithread']
+        @pool.close
       end
 
       def set_session(env, sid, new_session, options)
+        tokyo_connect
         @mutex.lock if env['rack.multithread']
         session = Marshal.load(session) rescue session if session = @pool[sid]
         if options[:renew] || options[:drop]
@@ -56,6 +62,7 @@ module Rack
         warn $!.inspect
       ensure
         @mutex.unlock if env['rack.multithread']
+        @pool.close
       end
 
       def generate_sid
