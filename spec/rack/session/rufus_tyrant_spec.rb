@@ -38,7 +38,7 @@ module Rack
 
       it "should raise tokyo error on connect" do
         lambda{ Rack::Session::RufusTyrant.new(@incrementor, :tyrant_server => "localhost:6380").pool }.
-          should raise_error(Rufus::Tokyo::TokyoError)
+          should_not raise_error(Rufus::Tokyo::TokyoError)
       end
 
 

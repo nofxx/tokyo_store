@@ -31,7 +31,6 @@ module Rack
           ret = @pool.put(sid, Marshal.dump(session))
           raise "Session collision on '#{sid.inspect}'" unless ret
         end
-        #session.instance_variable_put('@old', {}.merge(session))
         return [sid, session]
       rescue Rufus::Tokyo::TokyoError => e
         return [nil,  {}]
@@ -48,9 +47,7 @@ module Rack
           sid = generate_sid
           @pool.put(sid, "")
         end
-        #old_session = new_session.instance_variable_get('@old') || {}
-        session = new_session
-        @pool.put(sid, options && options[:raw] ? session : Marshal.dump(session))
+        @pool.put(sid, options && options[:raw] ? new_session : Marshal.dump(new_session))
         return sid
       rescue Rufus::Tokyo::TokyoError => e
         warn "#{self} is unable to find server, error: #{e}"

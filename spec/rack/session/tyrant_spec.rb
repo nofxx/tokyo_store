@@ -30,10 +30,10 @@ module Rack
       end
 
       it "should specify connection params" do
-        pool = Rack::Session::Tyrant.new(@incrementor, :tyrant_server => "127.0.0.1:1978")
-       # pool.should be_kind_of(Rufus::Tokyo::Tyrant)
-        pool.host.should eql("127.0.0.1")
-        pool.port.should eql("1978")
+        pool = Rack::Session::Tyrant.new(@incrementor, :tyrant_server => "127.0.0.1:1978").pool
+        pool.should be_kind_of(TokyoTyrant::RDB)
+        #pool.host.should eql("127.0.0.1")
+        #pool.port.should eql("1978")
 
         # pool = Rack::Session::Tyrant.new(@incrementor, :tokyo_server => ["localhost:6379", "localhost:6380"]).pool
         # pool.should be_kind_of(DistributedMarshaledTyrant)

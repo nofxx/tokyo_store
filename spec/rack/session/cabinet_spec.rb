@@ -27,17 +27,13 @@ module Rack
       end
 
       it "should specify connection params" do
-        pool = Rack::Session::Cabinet.new(@incrementor, :cabinet_file => "some.tch").pool
-       # pool.should be_kind_of(Rufus::Tokyo::Cabinet)
-        pool.path.should eql("some.tch")
-       # pool.port.should eql(1978)
-
-        # pool = Rack::Session::Tokyo.new(@incrementor, :tokyo_server => ["localhost:6379", "localhost:6380"]).pool
-        # pool.should be_kind_of(DistributedMarshaledTokyo)
+        pool = Rack::Session::Cabinet.new(@incrementor, :cabinet_file => "/tmp/some.tch").pool
+        pool.should be_kind_of(TokyoCabinet::HDB)
+        pool.path.should eql("/tmp/some.tch")
       end
 
       it "should raise tokyo error on connect" do
-        lambda{ Rack::Session::Tokyo.new(@incrementor, :cabinet_file => "session.tch").pool }.
+        lambda{ Rack::Session::Tokyo.new(@incrementor, :cabinet_file => "/tmp/session.tch").pool }.
           should_not raise_error(Rufus::Tokyo::TokyoError)
       end
 

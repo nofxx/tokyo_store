@@ -13,20 +13,17 @@ module Rack
         # connecting & closing on each get and put
         # not sure if this is the best option, but otherwise it'll keep
         # opening connections until tyrant freezes... =/
-        # tokyo_connect
-      #  tokyo_connect
-        p @pool
-         @pool ||= Rufus::Tokyo::Tyrant.new(@host, @port.to_i)
+         tokyo_connect
       end
 
       private
-      # def tokyo_connect
-      #   begin
-
-      #   rescue Rufus::Tokyo::TokyoError => e
-      #     warn "Can't connect to Tyrant #{e}"
-      #   end
-      # end
+      def tokyo_connect
+        begin
+        @pool ||= Rufus::Tokyo::Tyrant.new(@host, @port.to_i)
+        rescue Rufus::Tokyo::TokyoError => e
+          warn "Can't connect to Tyrant #{e}"
+        end
+      end
 
       def get_session(env, sid)
       #  tokyo_connect

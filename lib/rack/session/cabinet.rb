@@ -4,7 +4,7 @@ module Rack
     class Cabinet < Abstract::ID
       include TokyoCabinet
       attr_reader :mutex, :pool
-      DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge :cabinet_file => "session_cabinet.tch"
+      DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge :cabinet_file => "/tmp/session.tch"
 
       def initialize(app, options = {})
         super
@@ -16,13 +16,12 @@ module Rack
       private
       def tokyo_connect
         @pool = HDB.new
-        unless @pool.open(@db, HDB::OWRITER | HDB::OCREAT)
-          warn "Can't open db file #{@db}"
+        unless @pool.open(@db, HDB::OREADER | HDB::OWRITER | HDB::OCREAT)
+          warn "Can't open db file '#{@db}', #{@pool.errmsg}."
         end
       end
 
       def get_session(env, sid)
-        #  tokyo_connect
         session = Marshal.load(@pool.get(sid)) rescue session if sid && session = @pool.get(sid)
         @mutex.lock if env['rack.multithread']
         unless sid && session
@@ -32,17 +31,14 @@ module Rack
           ret = @pool.put(sid, Marshal.dump(session))
           raise "Session collision on '#{sid.inspect}'" unless ret
         end
-        #session.instance_variable_put('@old', {}.merge(session))
         return [sid, session]
       rescue Rufus::Tokyo::TokyoError => e
         return [nil,  {}]
       ensure
         @mutex.unlock if env['rack.multithread']
-      #  @pool.close
       end
 
       def set_session(env, sid, new_session, options)
-      #  tokyo_connect
         @mutex.lock if env['rack.multithread']
         session = Marshal.load(session) rescue session if session = @pool.get(sid)
         if options[:renew] || options[:drop]
@@ -51,16 +47,13 @@ module Rack
           sid = generate_sid
           @pool.put(sid, "")
         end
-        #old_session = new_session.instance_variable_get('@old') || {}
-        session = new_session
-        @pool.put(sid, options && options[:raw] ? session : Marshal.dump(session))
+        @pool.put(sid, options && options[:raw] ? new_session : Marshal.dump(new_session))
         return sid
       rescue Rufus::Tokyo::TokyoError => e
         warn "#{self} is unable to find server, error: #{e}"
         warn $!.inspect
       ensure
         @mutex.unlock if env['rack.multithread']
-     #   @pool.close
       end
 
       def generate_sid
