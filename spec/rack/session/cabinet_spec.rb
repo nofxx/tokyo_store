@@ -3,9 +3,6 @@ require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
 module Rack
   module Session
-    # class Tokyo
-    #   attr_reader :
-    # end
     describe "Rack::Session::Cabinet" do
       before(:each) do
         @session_key = Rack::Session::Cabinet::DEFAULT_OPTIONS[:key]
@@ -32,8 +29,8 @@ module Rack
       it "should specify connection params" do
         pool = Rack::Session::Cabinet.new(@incrementor, :cabinet_file => "some.tch").pool
        # pool.should be_kind_of(Rufus::Tokyo::Cabinet)
-        pool.host.should eql("127.0.0.1")
-        pool.port.should eql(1978)
+        pool.path.should eql("some.tch")
+       # pool.port.should eql(1978)
 
         # pool = Rack::Session::Tokyo.new(@incrementor, :tokyo_server => ["localhost:6379", "localhost:6380"]).pool
         # pool.should be_kind_of(DistributedMarshaledTokyo)

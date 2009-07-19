@@ -1,6 +1,8 @@
+require 'rufus/tokyo/tyrant'
+
 module Rack
   module Session
-    class Tokyo < Abstract::ID
+    class RufusTyrant < Abstract::ID
       attr_reader :mutex, :pool
       DEFAULT_OPTIONS = Abstract::ID::DEFAULT_OPTIONS.merge :tyrant_server => "localhost:1978"
 

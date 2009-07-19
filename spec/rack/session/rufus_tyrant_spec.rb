@@ -3,12 +3,9 @@ require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
 module Rack
   module Session
-    # class Tokyo
-    #   attr_reader :
-    # end
-    describe "Rack::Session::Tokyo" do
+    describe "Rack::Session::RufusTyrant" do
       before(:each) do
-        @session_key = Rack::Session::Tokyo::DEFAULT_OPTIONS[:key]
+        @session_key = Rack::Session::RufusTyrant::DEFAULT_OPTIONS[:key]
         @session_match = /#{@session_key}=[0-9a-fA-F]+;/
         @incrementor = lambda do |env|
           env["rack.session"]["counter"] ||= 0
@@ -30,30 +27,30 @@ module Rack
       end
 
       it "should specify connection params" do
-        pool = Rack::Session::Tokyo.new(@incrementor, :tyrant_server => "127.0.0.1:1978").pool
+        pool = Rack::Session::RufusTyrant.new(@incrementor, :tyrant_server => "127.0.0.1:1978").pool
         pool.should be_kind_of(Rufus::Tokyo::Tyrant)
         pool.host.should eql("127.0.0.1")
         pool.port.should eql(1978)
 
-        # pool = Rack::Session::Tokyo.new(@incrementor, :tokyo_server => ["localhost:6379", "localhost:6380"]).pool
-        # pool.should be_kind_of(DistributedMarshaledTokyo)
+        # pool = Rack::Session::RufusTyrant.new(@incrementor, :tokyo_server => ["localhost:6379", "localhost:6380"]).pool
+        # pool.should be_kind_of(DistributedMarshaledRufusTyrant)
       end
 
       it "should raise tokyo error on connect" do
-        lambda{ Rack::Session::Tokyo.new(@incrementor, :tyrant_server => "localhost:6380").pool }.
-          should_not raise_error(Rufus::Tokyo::TokyoError)
+        lambda{ Rack::Session::RufusTyrant.new(@incrementor, :tyrant_server => "localhost:6380").pool }.
+          should raise_error(Rufus::Tokyo::TokyoError)
       end
 
 
       it "creates a new cookie" do
-        pool = Rack::Session::Tokyo.new(@incrementor)
+        pool = Rack::Session::RufusTyrant.new(@incrementor)
         res = Rack::MockRequest.new(pool).get("/")
         res["Set-Cookie"].should match(/#{@session_key}=/)
         res.body.should eql('{"counter"=>1}')
       end
 
       it "determines session from a cookie" do
-        pool = Rack::Session::Tokyo.new(@incrementor)
+        pool = Rack::Session::RufusTyrant.new(@incrementor)
         req = Rack::MockRequest.new(pool)
         res = req.get("/")
         cookie = res["Set-Cookie"]
@@ -63,7 +60,7 @@ module Rack
 
       it "survives nonexistant cookies" do
         bad_cookie = "rack.session=blsarghfasel"
-        pool = Rack::Session::Tokyo.new(@incrementor)
+        pool = Rack::Session::RufusTyrant.new(@incrementor)
         res = Rack::MockRequest.new(pool).get("/", "HTTP_COOKIE" => bad_cookie)
         res.body.should eql('{"counter"=>1}')
         cookie = res["Set-Cookie"][@session_match]
@@ -72,7 +69,7 @@ module Rack
 
       # Expire isn't supported by cabinet. Implement in ruby?
       # it "should maintain freshness" do
-      #   pool = Rack::Session::Tokyo.new(@incrementor, :expire_after => 3)
+      #   pool = Rack::Session::RufusTyrant.new(@incrementor, :expire_after => 3)
       #   res = Rack::MockRequest.new(pool).get('/')
       #   res.body.should include('"counter"=>1')
       #   cookie = res["Set-Cookie"]
@@ -87,7 +84,7 @@ module Rack
       # end
 
       it "deletes cookies with :drop option" do
-        pool = Rack::Session::Tokyo.new(@incrementor)
+        pool = Rack::Session::RufusTyrant.new(@incrementor)
         req = Rack::MockRequest.new(pool)
         drop = Rack::Utils::Context.new(pool, @drop_session)
         dreq = Rack::MockRequest.new(drop)
@@ -110,7 +107,7 @@ module Rack
       end
 
       it "provides new session id with :renew option" do
-        pool = Rack::Session::Tokyo.new(@incrementor)
+        pool = Rack::Session::RufusTyrant.new(@incrementor)
         req = Rack::MockRequest.new(pool)
         renew = Rack::Utils::Context.new(pool, @renew_session)
         rreq = Rack::MockRequest.new(renew)
@@ -135,7 +132,7 @@ module Rack
       end
 
       specify "omits cookie with :defer option" do
-        pool = Rack::Session::Tokyo.new(@incrementor)
+        pool = Rack::Session::RufusTyrant.new(@incrementor)
         req = Rack::MockRequest.new(pool)
         defer = Rack::Utils::Context.new(pool, @defer_session)
         dreq = Rack::MockRequest.new(defer)
@@ -160,8 +157,8 @@ module Rack
       # anyone know how to do this better?
       specify "multithread: should cleanly merge sessions" do
         next unless $DEBUG
-        warn 'Running multithread test for Session::Tokyo'
-        pool = Rack::Session::Tokyo.new(@incrementor)
+        warn 'Running multithread test for Session::RufusTyrant'
+        pool = Rack::Session::RufusTyrant.new(@incrementor)
         req = Rack::MockRequest.new(pool)
 
         res = req.get('/')
@@ -242,7 +239,7 @@ module Rack
       end
 
       after(:all) do
-         Rack::Session::Tokyo.new(@incrementor).pool.clear
+         Rack::Session::RufusTyrant.new(@incrementor).pool.clear
       end
     end
   end

@@ -8,8 +8,13 @@ Demo:: http://github.com/nofxx/tokyo_webapps under rails/tokyo_store
 
 == Require
 
-Tokyo Cabinet/Tyrant:: http://tokyocabinet.sourceforge.net
-Rufus Tokyo:: http://github.com/jmettraux/rufus-tokyo
+Tokyo Cabinet and/or Tyrant:: http://tokyocabinet.sourceforge.net
+
+Choose an adapter:
+
+Tyrant - Pure Ruby:: http://tokyocabinet.sourceforge.net/tyrantrubydoc
+Cabinet - C Bindings:: http://tokyocabinet.sourceforge.net/rubydoc
+RufusTyrant - Rufus FFI:: http://github.com/jmettraux/rufus-tokyo
 
 
 == Install
@@ -19,11 +24,16 @@ Rufus Tokyo:: http://github.com/jmettraux/rufus-tokyo
 Rails (enviroment.rb)
 
   config.gem 'nofxx-tokyo_store', :lib => 'tokyo_store'
-  ActionController::Base.session_store = Rack::Session::Tokyo
+  ActionController::Base.session_store = Rack::Session::<ADAPTER (Tyrant, Cabinet or RufusTyrant)>
 
-Start Tyrant
+
+== Tyrant
+
+Start the server if you are using a Tyrant based adapter:
 
   ttserver data.tch
+
+Some rake tasks: http://gist.github.com/147413
 
 
 Have fun!
@@ -33,7 +43,7 @@ Have fun!
 
 Mikio Hirabayashi:: tokyo products
 John Mettraux:: rufus-tokyo
-Luca Guidi:: redis-store - Rack code stolen from here =D
+Luca Guidi:: redis-store
 
 
 == Copyright

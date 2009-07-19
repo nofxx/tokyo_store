@@ -1,9 +1,10 @@
-require 'rufus/tokyo/tyrant'
 
 # Rack Session
 if defined?(Rack::Session)
   require "rack/session/abstract/id"
-  require "rack/session/tokyo"
+  require "rack/session/tyrant"
+  #require "rack/session/cabinet"
+  #require "rack/session/rufus_tyrant"
 end
 
 # # Cache store

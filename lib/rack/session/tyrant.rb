@@ -9,7 +9,7 @@ module Rack
       def initialize(app, options = {})
         super
         @mutex = Mutex.new
-        @host, @port = *(options[:tyrant_server] || @default_options[:tyrant_server]).split(":") # @default_options)        #options[:cache] ||
+        @host, @port = *(options[:tyrant_server] || @default_options[:tyrant_server]).split(":")
         tokyo_connect
       end
 
@@ -17,12 +17,11 @@ module Rack
       def tokyo_connect
         @pool = RDB.new
         unless @pool.open(@host, @port.to_i)
-          warn "Can't connect to Tyrant #{e}"
+          warn "Can't connect to Tyrant #{@host}:#{@port}"
         end
       end
 
       def get_session(env, sid)
-        #  tokyo_connect
         session = Marshal.load(@pool.get(sid)) rescue session if sid && session = @pool.get(sid)
         @mutex.lock if env['rack.multithread']
         unless sid && session
@@ -38,11 +37,9 @@ module Rack
         return [nil,  {}]
       ensure
         @mutex.unlock if env['rack.multithread']
-      #  @pool.close
       end
 
       def set_session(env, sid, new_session, options)
-      #  tokyo_connect
         @mutex.lock if env['rack.multithread']
         session = Marshal.load(session) rescue session if session = @pool.get(sid)
         if options[:renew] || options[:drop]
@@ -60,7 +57,6 @@ module Rack
         warn $!.inspect
       ensure
         @mutex.unlock if env['rack.multithread']
-     #   @pool.close
       end
 
       def generate_sid
