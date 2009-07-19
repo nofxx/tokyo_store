@@ -26,6 +26,13 @@ TEST = {
 }
 bar = "_" * 45
 
+puts "\n#{bar}  SET"
+Benchmark.bmbm do |b|
+  TEST.each_pair do |n,s|
+    b.report(n) {  T.times {  Rack::MockRequest.new(s).get("/") }}
+  end
+end
+
 puts "\n#{bar}  GET"
 Benchmark.bmbm do |b|
   TEST.each_pair do |n,s|
@@ -34,13 +41,6 @@ Benchmark.bmbm do |b|
       cookie = req.get("/")["Set-Cookie"]
       req.get("/", "HTTP_COOKIE" => cookie)
     end end
-  end
-end
-
-puts "\n#{bar}  SET"
-Benchmark.bmbm do |b|
-  TEST.each_pair do |n,s|
-    b.report(n) {  T.times {  Rack::MockRequest.new(s).get("/") }}
   end
 end
 
